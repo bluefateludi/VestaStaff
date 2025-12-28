@@ -58,3 +58,11 @@ export function calculateAllSalaries() {
     method: 'get'
   })
 }
+
+// 获取员工统计数据
+export function getStatistics() {
+  return request({
+    url: '/system/employee/statistics',
+    method: 'get'
+  })
+}

@@ -148,4 +148,15 @@ public class EmployeeServiceImpl implements IEmployeeService
 
         return salaryMap;
     }
+
+    /**
+     * 获取员工统计数据
+     *
+     * @return 统计数据Map
+     */
+    @Override
+    public Map<String, Object> getEmployeeStatistics()
+    {
+        return employeeMapper.selectEmployeeStatistics();
+    }
 }

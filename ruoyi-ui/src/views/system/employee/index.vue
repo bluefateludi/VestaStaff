@@ -143,6 +143,123 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
+    <!-- 统计卡片区域 -->
+    <el-row :gutter="20" class="statistics-panel" v-if="statistics != null">
+      <el-col :span="6">
+        <el-card class="statistics-card">
+          <div class="statistic-content">
+            <div class="statistic-icon" style="background: #40c9c6;">
+              <i class="el-icon-user"></i>
+            </div>
+            <div class="statistic-text">
+              <div class="statistic-title">总员工数</div>
+              <count-to :start-val="0" :end-val="statistics.totalCount || 0" :duration="2000" class="statistic-value" />
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="6">
+        <el-card class="statistics-card">
+          <div class="statistic-content">
+            <div class="statistic-icon" style="background: #36a3f7;">
+              <i class="el-icon-user-solid"></i>
+            </div>
+            <div class="statistic-text">
+              <div class="statistic-title">男性员工</div>
+              <count-to :start-val="0" :end-val="statistics.maleCount || 0" :duration="2000" class="statistic-value" />
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="6">
+        <el-card class="statistics-card">
+          <div class="statistic-content">
+            <div class="statistic-icon" style="background: #f4516c;">
+              <i class="el-icon-female"></i>
+            </div>
+            <div class="statistic-text">
+              <div class="statistic-title">女性员工</div>
+              <count-to :start-val="0" :end-val="statistics.femaleCount || 0" :duration="2000" class="statistic-value" />
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="6">
+        <el-card class="statistics-card">
+          <div class="statistic-content">
+            <div class="statistic-icon" style="background: #34bfa3;">
+              <i class="el-icon-s-custom"></i>
+            </div>
+            <div class="statistic-text">
+              <div class="statistic-title">技术人员</div>
+              <count-to :start-val="0" :end-val="statistics.technicianCount || 0" :duration="2000" class="statistic-value" />
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 详细统计表格区域 -->
+    <el-row :gutter="20" class="statistics-detail" v-if="statistics != null">
+      <el-col :span="12">
+        <el-card>
+          <div slot="header">
+            <span>员工类型分布</span>
+          </div>
+          <el-table :data="employeeTypeData" style="width: 100%">
+            <el-table-column prop="type" label="员工类型" width="180"></el-table-column>
+            <el-table-column prop="count" label="人数"></el-table-column>
+            <el-table-column prop="percentage" label="占比">
+              <template slot-scope="scope">
+                <el-tag :type="getTypeTagType(scope.row.type)">{{ scope.row.percentage }}%</el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+
+      <el-col :span="12">
+        <el-card>
+          <div slot="header">
+            <span>性别分布</span>
+          </div>
+          <el-table :data="genderData" style="width: 100%">
+            <el-table-column prop="gender" label="性别" width="180"></el-table-column>
+            <el-table-column prop="count" label="人数"></el-table-column>
+            <el-table-column prop="percentage" label="占比">
+              <template slot-scope="scope">
+                <el-tag :type="scope.row.gender === '男' ? 'primary' : 'danger'">{{ scope.row.percentage }}%</el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 图表区域 -->
+    <el-row :gutter="20" class="charts-section" v-if="statistics != null">
+      <el-col :span="12">
+        <el-card>
+          <div slot="header">
+            <span>员工类型统计图表</span>
+          </div>
+          <employee-type-bar-chart :chart-data="statistics" height="300px" />
+        </el-card>
+      </el-col>
+
+      <el-col :span="12">
+        <el-card>
+          <div slot="header">
+            <span>性别分布图表</span>
+          </div>
+          <gender-pie-chart :chart-data="statistics" height="300px" />
+        </el-card>
+      </el-col>
+    </el-row>
+
     <el-table v-loading="loading" :data="employeeList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="员工编号" align="center" prop="empId" />
@@ -247,10 +364,18 @@
 </template>
 
 <script>
-import { listEmployee, getEmployee, delEmployee, addEmployee, updateEmployee, calculateSalary, calculateAllSalaries } from "@/api/system/employee"
+import { listEmployee, getEmployee, delEmployee, addEmployee, updateEmployee, calculateSalary, calculateAllSalaries, getStatistics } from "@/api/system/employee"
+import CountTo from 'vue-count-to'
+import EmployeeTypeBarChart from './components/EmployeeTypeBarChart'
+import GenderPieChart from './components/GenderPieChart'
 
 export default {
   name: "Employee",
+  components: {
+    CountTo,
+    EmployeeTypeBarChart,
+    GenderPieChart
+  },
   data() {
     return {
       // 遮罩层
@@ -269,6 +394,8 @@ export default {
       employeeList: [],
       // 工资映射表
       salaryMap: {},
+      // 统计数据
+      statistics: null,
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -302,8 +429,55 @@ export default {
       }
     }
   },
+  computed: {
+    // 员工类型数据
+    employeeTypeData() {
+      if (!this.statistics) return []
+      const total = this.statistics.totalCount || 0
+      return [
+        {
+          type: '经理',
+          count: this.statistics.managerCount || 0,
+          percentage: total > 0 ? ((this.statistics.managerCount || 0) / total * 100).toFixed(1) : 0
+        },
+        {
+          type: '技术人员',
+          count: this.statistics.technicianCount || 0,
+          percentage: total > 0 ? ((this.statistics.technicianCount || 0) / total * 100).toFixed(1) : 0
+        },
+        {
+          type: '销售人员',
+          count: this.statistics.salesCount || 0,
+          percentage: total > 0 ? ((this.statistics.salesCount || 0) / total * 100).toFixed(1) : 0
+        },
+        {
+          type: '销售经理',
+          count: this.statistics.salesManagerCount || 0,
+          percentage: total > 0 ? ((this.statistics.salesManagerCount || 0) / total * 100).toFixed(1) : 0
+        }
+      ]
+    },
+    // 性别数据
+    genderData() {
+      if (!this.statistics) return []
+      const total = this.statistics.totalCount || 0
+      return [
+        {
+          gender: '男',
+          count: this.statistics.maleCount || 0,
+          percentage: total > 0 ? ((this.statistics.maleCount || 0) / total * 100).toFixed(1) : 0
+        },
+        {
+          gender: '女',
+          count: this.statistics.femaleCount || 0,
+          percentage: total > 0 ? ((this.statistics.femaleCount || 0) / total * 100).toFixed(1) : 0
+        }
+      ]
+    }
+  },
   created() {
     this.getList()
+    this.getStatisticsData()
   },
   methods: {
     /** 查询员工信息列表 */
@@ -313,6 +487,12 @@ export default {
         this.employeeList = response.rows
         this.total = response.total
         this.loading = false
+      })
+    },
+    /** 获取统计数据 */
+    getStatisticsData() {
+      getStatistics().then(response => {
+        this.statistics = response.data
       })
     },
     // 取消按钮
@@ -488,6 +668,16 @@ export default {
         'SALES_MANAGER': '销售经理'
       }
       return typeMap[type] || type
+    },
+    /** 获取类型标签颜色 */
+    getTypeTagType(type) {
+      const typeMap = {
+        '经理': 'success',
+        '技术人员': 'primary',
+        '销售人员': 'warning',
+        '销售经理': 'danger'
+      }
+      return typeMap[type] || ''
     }
   }
 }
@@ -503,5 +693,65 @@ export default {
 
 .salary-details-box >>> .el-message-box__content {
   text-align: left;
+}
+
+/* 统计卡片样式 */
+.statistics-panel {
+  margin-bottom: 20px;
+}
+
+.statistics-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.statistics-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.statistic-content {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.statistic-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.statistic-icon i {
+  font-size: 28px;
+  color: #fff;
+}
+
+.statistic-text {
+  flex: 1;
+}
+
+.statistic-title {
+  font-size: 14px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+
+.statistic-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
+}
+
+.statistics-detail {
+  margin-bottom: 20px;
+}
+
+.charts-section {
+  margin-bottom: 20px;
 }
 </style>

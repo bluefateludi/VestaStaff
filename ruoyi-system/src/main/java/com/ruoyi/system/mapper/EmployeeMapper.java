@@ -1,6 +1,7 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import java.util.Map;
 import com.ruoyi.system.domain.EmployeeDTO;
 
 /**
@@ -53,9 +54,16 @@ public interface EmployeeMapper
 
     /**
      * 批量删除员工信息
-     * 
+     *
      * @param empIds 需要删除的数据主键集合
      * @return 结果
      */
     public int deleteEmployeeByEmpIds(String[] empIds);
+
+    /**
+     * 获取员工统计数据
+     *
+     * @return 统计数据Map
+     */
+    public Map<String, Object> selectEmployeeStatistics();
 }

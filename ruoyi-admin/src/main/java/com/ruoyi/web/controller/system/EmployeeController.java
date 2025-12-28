@@ -125,4 +125,15 @@ public class EmployeeController extends BaseController
         Map<String, BigDecimal> salaries = employeeService.calculateAllSalaries();
         return success(salaries);
     }
+
+    /**
+     * 获取员工统计数据
+     */
+    @PreAuthorize("@ss.hasPermi('system:employee:query')")
+    @GetMapping("/statistics")
+    public AjaxResult getStatistics()
+    {
+        Map<String, Object> statistics = employeeService.getEmployeeStatistics();
+        return success(statistics);
+    }
 }

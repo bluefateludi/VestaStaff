@@ -75,4 +75,11 @@ public interface IEmployeeService
      * @return 员工编号与工资的映射 Map
      */
     public Map<String, BigDecimal> calculateAllSalaries();
+
+    /**
+     * 获取员工统计数据
+     *
+     * @return 统计数据Map
+     */
+    public Map<String, Object> getEmployeeStatistics();
 }

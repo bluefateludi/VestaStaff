@@ -120,9 +120,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteEmployeeByEmpIds" parameterType="String">
-        delete from employee where emp_id in 
+        delete from employee where emp_id in
         <foreach item="empId" collection="array" open="(" separator="," close=")">
             #{empId}
         </foreach>
     </delete>
+
+    <!-- 获取员工统计数据 -->
+    <select id="selectEmployeeStatistics" resultType="java.util.HashMap">
+        SELECT
+            COUNT(*) as totalCount,
+            SUM(CASE WHEN gender = '0' THEN 1 ELSE 0 END) as maleCount,
+            SUM(CASE WHEN gender = '1' THEN 1 ELSE 0 END) as femaleCount,
+            SUM(CASE WHEN employee_type = 'MANAGER' THEN 1 ELSE 0 END) as managerCount,
+            SUM(CASE WHEN employee_type = 'TECHNICIAN' THEN 1 ELSE 0 END) as technicianCount,
+            SUM(CASE WHEN employee_type = 'SALES' THEN 1 ELSE 0 END) as salesCount,
+            SUM(CASE WHEN employee_type = 'SALES_MANAGER' THEN 1 ELSE 0 END) as salesManagerCount
+        FROM employee
+    </select>
 </mapper>
