@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.EmployeeMapper">
+    
+    <resultMap type="Employee" id="EmployeeResult">
+        <result property="empId"    column="emp_id"    />
+        <result property="empName"    column="emp_name"    />
+        <result property="gender"    column="gender"    />
+        <result property="deptId"    column="dept_id"    />
+        <result property="level"    column="level"    />
+        <result property="employeeType"    column="employee_type"    />
+        <result property="baseSalary"    column="base_salary"    />
+        <result property="bonus"    column="bonus"    />
+        <result property="workHours"    column="work_hours"    />
+        <result property="hourlyRate"    column="hourly_rate"    />
+        <result property="salesAmount"    column="sales_amount"    />
+        <result property="commissionRate"    column="commission_rate"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectEmployeeVo">
+        select emp_id, emp_name, gender, dept_id, level, employee_type, base_salary, bonus, work_hours, hourly_rate, sales_amount, commission_rate, create_by, create_time, update_by, update_time, remark from employee
+    </sql>
+
+    <select id="selectEmployeeList" parameterType="Employee" resultMap="EmployeeResult">
+        <include refid="selectEmployeeVo"/>
+        <where>  
+            <if test="empName != null  and empName != ''"> and emp_name like concat('%', #{empName}, '%')</if>
+            <if test="gender != null  and gender != ''"> and gender = #{gender}</if>
+            <if test="deptId != null "> and dept_id = #{deptId}</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+            <if test="employeeType != null  and employeeType != ''"> and employee_type = #{employeeType}</if>
+            <if test="baseSalary != null "> and base_salary = #{baseSalary}</if>
+            <if test="bonus != null "> and bonus = #{bonus}</if>
+            <if test="workHours != null "> and work_hours = #{workHours}</if>
+            <if test="hourlyRate != null "> and hourly_rate = #{hourlyRate}</if>
+            <if test="salesAmount != null "> and sales_amount = #{salesAmount}</if>
+            <if test="commissionRate != null "> and commission_rate = #{commissionRate}</if>
+        </where>
+    </select>
+    
+    <select id="selectEmployeeByEmpId" parameterType="String" resultMap="EmployeeResult">
+        <include refid="selectEmployeeVo"/>
+        where emp_id = #{empId}
+    </select>
+
+    <insert id="insertEmployee" parameterType="Employee">
+        insert into employee
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="empId != null">emp_id,</if>
+            <if test="empName != null and empName != ''">emp_name,</if>
+            <if test="gender != null">gender,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="level != null">level,</if>
+            <if test="employeeType != null and employeeType != ''">employee_type,</if>
+            <if test="baseSalary != null">base_salary,</if>
+            <if test="bonus != null">bonus,</if>
+            <if test="workHours != null">work_hours,</if>
+            <if test="hourlyRate != null">hourly_rate,</if>
+            <if test="salesAmount != null">sales_amount,</if>
+            <if test="commissionRate != null">commission_rate,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="empId != null">#{empId},</if>
+            <if test="empName != null and empName != ''">#{empName},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="level != null">#{level},</if>
+            <if test="employeeType != null and employeeType != ''">#{employeeType},</if>
+            <if test="baseSalary != null">#{baseSalary},</if>
+            <if test="bonus != null">#{bonus},</if>
+            <if test="workHours != null">#{workHours},</if>
+            <if test="hourlyRate != null">#{hourlyRate},</if>
+            <if test="salesAmount != null">#{salesAmount},</if>
+            <if test="commissionRate != null">#{commissionRate},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateEmployee" parameterType="Employee">
+        update employee
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="empName != null and empName != ''">emp_name = #{empName},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="employeeType != null and employeeType != ''">employee_type = #{employeeType},</if>
+            <if test="baseSalary != null">base_salary = #{baseSalary},</if>
+            <if test="bonus != null">bonus = #{bonus},</if>
+            <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="hourlyRate != null">hourly_rate = #{hourlyRate},</if>
+            <if test="salesAmount != null">sales_amount = #{salesAmount},</if>
+            <if test="commissionRate != null">commission_rate = #{commissionRate},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where emp_id = #{empId}
+    </update>
+
+    <delete id="deleteEmployeeByEmpId" parameterType="String">
+        delete from employee where emp_id = #{empId}
+    </delete>
+
+    <delete id="deleteEmployeeByEmpIds" parameterType="String">
+        delete from employee where emp_id in 
+        <foreach item="empId" collection="array" open="(" separator="," close=")">
+            #{empId}
+        </foreach>
+    </delete>
+</mapper>
