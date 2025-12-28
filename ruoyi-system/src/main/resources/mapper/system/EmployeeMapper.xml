@@ -4,7 +4,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.EmployeeMapper">
     
-    <resultMap type="Employee" id="EmployeeResult">
+    <resultMap type="com.ruoyi.system.domain.EmployeeDTO" id="EmployeeResult">
         <result property="empId"    column="emp_id"    />
         <result property="empName"    column="emp_name"    />
         <result property="gender"    column="gender"    />
@@ -28,7 +28,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select emp_id, emp_name, gender, dept_id, level, employee_type, base_salary, bonus, work_hours, hourly_rate, sales_amount, commission_rate, create_by, create_time, update_by, update_time, remark from employee
     </sql>
 
-    <select id="selectEmployeeList" parameterType="Employee" resultMap="EmployeeResult">
+    <select id="selectEmployeeList" parameterType="com.ruoyi.system.domain.EmployeeDTO" resultMap="EmployeeResult">
         <include refid="selectEmployeeVo"/>
         <where>  
             <if test="empName != null  and empName != ''"> and emp_name like concat('%', #{empName}, '%')</if>
@@ -50,7 +50,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where emp_id = #{empId}
     </select>
 
-    <insert id="insertEmployee" parameterType="Employee">
+    <insert id="insertEmployee" parameterType="com.ruoyi.system.domain.EmployeeDTO">
         insert into employee
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="empId != null">emp_id,</if>
@@ -92,7 +92,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
     </insert>
 
-    <update id="updateEmployee" parameterType="Employee">
+    <update id="updateEmployee" parameterType="com.ruoyi.system.domain.EmployeeDTO">
         update employee
         <trim prefix="SET" suffixOverrides=",">
             <if test="empName != null and empName != ''">emp_name = #{empName},</if>

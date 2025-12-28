@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.EmployeeMapper;
 import com.ruoyi.system.domain.Employee;
+import com.ruoyi.system.domain.EmployeeDTO;
 import com.ruoyi.system.domain.EmployeeFactory;
 import com.ruoyi.system.service.IEmployeeService;
 
@@ -27,36 +28,36 @@ public class EmployeeServiceImpl implements IEmployeeService
 
     /**
      * 查询员工信息
-     * 
+     *
      * @param empId 员工信息主键
      * @return 员工信息
      */
     @Override
-    public Employee selectEmployeeByEmpId(String empId)
+    public EmployeeDTO selectEmployeeByEmpId(String empId)
     {
         return employeeMapper.selectEmployeeByEmpId(empId);
     }
 
     /**
      * 查询员工信息列表
-     * 
+     *
      * @param employee 员工信息
      * @return 员工信息
      */
     @Override
-    public List<Employee> selectEmployeeList(Employee employee)
+    public List<EmployeeDTO> selectEmployeeList(EmployeeDTO employee)
     {
         return employeeMapper.selectEmployeeList(employee);
     }
 
     /**
      * 新增员工信息
-     * 
+     *
      * @param employee 员工信息
      * @return 结果
      */
     @Override
-    public int insertEmployee(Employee employee)
+    public int insertEmployee(EmployeeDTO employee)
     {
         employee.setCreateTime(DateUtils.getNowDate());
         return employeeMapper.insertEmployee(employee);
@@ -64,12 +65,12 @@ public class EmployeeServiceImpl implements IEmployeeService
 
     /**
      * 修改员工信息
-     * 
+     *
      * @param employee 员工信息
      * @return 结果
      */
     @Override
-    public int updateEmployee(Employee employee)
+    public int updateEmployee(EmployeeDTO employee)
     {
         employee.setUpdateTime(DateUtils.getNowDate());
         return employeeMapper.updateEmployee(employee);
@@ -109,19 +110,19 @@ public class EmployeeServiceImpl implements IEmployeeService
     @Override
     public BigDecimal calculateEmployeeSalary(String empId)
     {
-        // 1. 从数据库查询员工信息
-        Employee emp = employeeMapper.selectEmployeeByEmpId(empId);
+        // 1. 从数据库查询员工信息（现在返回的是 EmployeeDTO）
+        EmployeeDTO empDto = employeeMapper.selectEmployeeByEmpId(empId);
 
-        if (emp == null)
+        if (empDto == null)
         {
             throw new RuntimeException("员工不存在: " + empId);
         }
 
         // 2. 根据类型创建对应的子类对象（工厂模式）
-        Employee concreteEmp = EmployeeFactory.createEmployee(emp.getEmployeeType());
+        Employee concreteEmp = EmployeeFactory.createEmployee(empDto.getEmployeeType());
 
         // 3. 复制属性到子类对象
-        BeanUtils.copyProperties(emp, concreteEmp);
+        BeanUtils.copyProperties(empDto, concreteEmp);
 
         // 4. 调用多态方法计算工资（核心！）
         // 同一个方法调用，不同的子类有不同的实现
@@ -136,13 +137,13 @@ public class EmployeeServiceImpl implements IEmployeeService
     @Override
     public Map<String, BigDecimal> calculateAllSalaries()
     {
-        List<Employee> employees = employeeMapper.selectEmployeeList(new Employee());
+        List<EmployeeDTO> employeeDtos = employeeMapper.selectEmployeeList(null);
         Map<String, BigDecimal> salaryMap = new HashMap<>();
 
-        for (Employee emp : employees)
+        for (EmployeeDTO empDto : employeeDtos)
         {
-            BigDecimal salary = calculateEmployeeSalary(emp.getEmpId());
-            salaryMap.put(emp.getEmpId(), salary);
+            BigDecimal salary = calculateEmployeeSalary(empDto.getEmpId());
+            salaryMap.put(empDto.getEmpId(), salary);
         }
 
         return salaryMap;

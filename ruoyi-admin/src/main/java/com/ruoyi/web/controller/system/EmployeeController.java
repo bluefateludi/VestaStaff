@@ -18,7 +18,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
-import com.ruoyi.system.domain.Employee;
+import com.ruoyi.system.domain.EmployeeDTO;
 import com.ruoyi.system.service.IEmployeeService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -41,10 +41,10 @@ public class EmployeeController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:employee:list')")
     @GetMapping("/list")
-    public TableDataInfo list(Employee employee)
+    public TableDataInfo list(EmployeeDTO employeeDTO)
     {
         startPage();
-        List<Employee> list = employeeService.selectEmployeeList(employee);
+        List<EmployeeDTO> list = employeeService.selectEmployeeList(employeeDTO);
         return getDataTable(list);
     }
 
@@ -54,10 +54,10 @@ public class EmployeeController extends BaseController
     @PreAuthorize("@ss.hasPermi('system:employee:export')")
     @Log(title = "员工信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, Employee employee)
+    public void export(HttpServletResponse response, EmployeeDTO employeeDTO)
     {
-        List<Employee> list = employeeService.selectEmployeeList(employee);
-        ExcelUtil<Employee> util = new ExcelUtil<Employee>(Employee.class);
+        List<EmployeeDTO> list = employeeService.selectEmployeeList(employeeDTO);
+        ExcelUtil<EmployeeDTO> util = new ExcelUtil<EmployeeDTO>(EmployeeDTO.class);
         util.exportExcel(response, list, "员工信息数据");
     }
 
@@ -77,9 +77,9 @@ public class EmployeeController extends BaseController
     @PreAuthorize("@ss.hasPermi('system:employee:add')")
     @Log(title = "员工信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody Employee employee)
+    public AjaxResult add(@RequestBody EmployeeDTO employeeDTO)
     {
-        return toAjax(employeeService.insertEmployee(employee));
+        return toAjax(employeeService.insertEmployee(employeeDTO));
     }
 
     /**
@@ -88,9 +88,9 @@ public class EmployeeController extends BaseController
     @PreAuthorize("@ss.hasPermi('system:employee:edit')")
     @Log(title = "员工信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody Employee employee)
+    public AjaxResult edit(@RequestBody EmployeeDTO employeeDTO)
     {
-        return toAjax(employeeService.updateEmployee(employee));
+        return toAjax(employeeService.updateEmployee(employeeDTO));
     }
 
     /**

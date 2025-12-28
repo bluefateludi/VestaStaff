@@ -107,6 +107,13 @@
                 <version>${druid.version}</version>
             </dependency>
 
+            <!-- lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.30</version>
+            </dependency>
+
             <!-- 解析客户端操作系统、浏览器等 -->
             <dependency>
                 <groupId>nl.basjes.parse.useragent</groupId>
@@ -203,6 +210,8 @@
                 <artifactId>ruoyi-framework</artifactId>
                 <version>${ruoyi.version}</version>
             </dependency>
+
+
 
             <!-- 系统模块-->
             <dependency>

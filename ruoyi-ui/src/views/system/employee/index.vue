@@ -130,6 +130,16 @@
           v-hasPermi="['system:employee:export']"
         >导出</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="el-icon-s-finance"
+          size="mini"
+          @click="handleBatchCalculate"
+          v-hasPermi="['system:employee:query']"
+        >批量计算</el-button>
+      </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -147,6 +157,14 @@
       <el-table-column label="时薪(技术人员专用)" align="center" prop="hourlyRate" />
       <el-table-column label="销售额(销售人员专用)" align="center" prop="salesAmount" />
       <el-table-column label="提成比例(销售人员专用)" align="center" prop="commissionRate" />
+      <el-table-column label="工资" align="center" prop="salary" width="120">
+        <template slot-scope="scope">
+          <span v-if="salaryMap[scope.row.empId] !== undefined" style="color: #67C23A; font-weight: bold;">
+            ¥{{ salaryMap[scope.row.empId] }}
+          </span>
+          <span v-else style="color: #909399;">未计算</span>
+        </template>
+      </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -157,6 +175,13 @@
             @click="handleUpdate(scope.row)"
             v-hasPermi="['system:employee:edit']"
           >修改</el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-s-finance"
+            @click="handleCalculateSalary(scope.row)"
+            v-hasPermi="['system:employee:query']"
+          >计算工资</el-button>
           <el-button
             size="mini"
             type="text"
@@ -222,7 +247,7 @@
 </template>
 
 <script>
-import { listEmployee, getEmployee, delEmployee, addEmployee, updateEmployee } from "@/api/system/employee"
+import { listEmployee, getEmployee, delEmployee, addEmployee, updateEmployee, calculateSalary, calculateAllSalaries } from "@/api/system/employee"
 
 export default {
   name: "Employee",
@@ -242,6 +267,8 @@ export default {
       total: 0,
       // 员工信息表格数据
       employeeList: [],
+      // 工资映射表
+      salaryMap: {},
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -383,7 +410,98 @@ export default {
       this.download('system/employee/export', {
         ...this.queryParams
       }, `employee_${new Date().getTime()}.xlsx`)
+    },
+    /** 计算单个员工工资 */
+    handleCalculateSalary(row) {
+      calculateSalary(row.empId).then(response => {
+        const salary = response.data
+        // 更新工资映射表
+        this.$set(this.salaryMap, row.empId, salary)
+
+        // 构建详情信息
+        let details = `员工姓名: ${row.empName}\n`
+        details += `员工编号: ${row.empId}\n`
+        details += `员工类型: ${this.getEmployeeTypeText(row.employeeType)}\n\n`
+
+        details += `【工资明细】\n`
+        details += `基本工资: ¥${row.baseSalary || 0}\n`
+
+        switch(row.employeeType) {
+          case 'MANAGER':
+            details += `奖金: ¥${row.bonus || 0}\n`
+            details += `\n计算公式: 基本工资 + 奖金\n`
+            details += `${row.baseSalary || 0} + ${row.bonus || 0} = ${salary}`
+            break
+          case 'TECHNICIAN':
+            details += `工作小时: ${row.workHours || 0}小时\n`
+            details += `时薪: ¥${row.hourlyRate || 0}/小时\n`
+            const overtimePay = ((row.workHours || 0) * (row.hourlyRate || 0)).toFixed(2)
+            details += `加班工资: ¥${overtimePay}\n`
+            details += `\n计算公式: 基本工资 + 工作小时 × 时薪\n`
+            details += `${row.baseSalary || 0} + ${row.workHours || 0} × ${row.hourlyRate || 0} = ${salary}`
+            break
+          case 'SALES':
+            details += `销售额: ¥${row.salesAmount || 0}\n`
+            details += `提成比例: ${row.commissionRate || 0}%\n`
+            const commission = ((row.salesAmount || 0) * ((row.commissionRate || 0) / 100)).toFixed(2)
+            details += `提成: ¥${commission}\n`
+            details += `\n计算公式: 基本工资 + 销售额 × 提成比例\n`
+            details += `${row.baseSalary || 0} + ${row.salesAmount || 0} × ${row.commissionRate || 0}% = ${salary}`
+            break
+          case 'SALES_MANAGER':
+            details += `奖金: ¥${row.bonus || 0}\n`
+            details += `销售额: ¥${row.salesAmount || 0}\n`
+            details += `提成比例: ${row.commissionRate || 0}%\n`
+            const smCommission = ((row.salesAmount || 0) * ((row.commissionRate || 0) / 100)).toFixed(2)
+            details += `提成: ¥${smCommission}\n`
+            details += `\n计算公式: 基本工资 + 奖金 + 销售额 × 提成比例\n`
+            details += `${row.baseSalary || 0} + ${row.bonus || 0} + ${row.salesAmount || 0} × ${row.commissionRate || 0}% = ${salary}`
+            break
+        }
+
+        details += `\n\n【总工资: ¥${salary}】`
+
+        this.$alert(details, '工资详情', {
+          confirmButtonText: '确定',
+          customClass: 'salary-details-box'
+        })
+      })
+    },
+    /** 批量计算工资 */
+    handleBatchCalculate() {
+      this.$modal.confirm('是否确认批量计算所有员工工资?').then(() => {
+        calculateAllSalaries().then(response => {
+          this.salaryMap = response.data
+          this.$message({
+            message: `成功计算 ${Object.keys(response.data).length} 名员工工资`,
+            type: 'success'
+          })
+        })
+      }).catch(() => {})
+    },
+    /** 获取员工类型文本 */
+    getEmployeeTypeText(type) {
+      const typeMap = {
+        'MANAGER': '经理',
+        'TECHNICIAN': '技术人员',
+        'SALES': '销售人员',
+        'SALES_MANAGER': '销售经理'
+      }
+      return typeMap[type] || type
     }
   }
 }
 </script>
+
+<style scoped>
+.salary-details-box {
+  white-space: pre-line;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.salary-details-box >>> .el-message-box__content {
+  text-align: left;
+}
+</style>

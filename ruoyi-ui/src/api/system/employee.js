@@ -42,3 +42,19 @@ export function delEmployee(empId) {
     method: 'delete'
   })
 }
+
+// 计算单个员工工资
+export function calculateSalary(empId) {
+  return request({
+    url: '/system/employee/salary/' + empId,
+    method: 'get'
+  })
+}
+
+// 批量计算所有员工工资
+export function calculateAllSalaries() {
+  return request({
+    url: '/system/employee/salaries',
+    method: 'get'
+  })
+}
